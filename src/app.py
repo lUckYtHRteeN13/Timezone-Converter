@@ -1,3 +1,4 @@
+import re
 import tkinter as tk
 from tkinter import ttk
 import utils
@@ -5,15 +6,17 @@ import utils
 class MainWindow(tk.Tk):
     def __init__(self):
         super().__init__() 
-        self.iconbitmap(utils.ICON_IMG)
+        self.icon_img = tk.PhotoImage(file=utils.ICON_IMG)
+        self.iconphoto(False, self.icon_img)
         self.btn_img = tk.PhotoImage(file=utils.SWITCH_IMG)
         self.btn_img = self.btn_img.subsample(3,3)
         self.timezones = utils.TIMEZONE
         self.app_name = "Time Zone Converter"
+        self.indication = ""
 
         self.SCR_WIDTH= self.winfo_screenwidth()
         self.SCR_HEIGHT= self.winfo_screenheight()
-        self.geometry(f"410x270")
+        self.geometry("410x270")
         self.title(self.app_name)
         self.resizable(False, False)
         self.grid_columnconfigure(0, weight=1)
@@ -35,8 +38,10 @@ class MainWindow(tk.Tk):
 
         self.gen_frame = ttk.Frame(self, relief="groove")
         self.gen_frame.grid(row=1, column=0, sticky="nsew", padx=30, pady=40)
+        
         for i in range(6):
             self.gen_frame.grid_columnconfigure(i, weight=1)
+        
         self.gen_frame.grid_rowconfigure(1, weight=1)
         self.gen_frame.grid_rowconfigure(0, weight=1)
 
@@ -57,9 +62,9 @@ class MainWindow(tk.Tk):
         self.minute.grid(row=0, column=2, sticky="ew", padx=5, pady=5)
         self.input_min.set("00")
 
-        self.am_btn = tk.Button(self.gen_frame, text="AM", width=2, command=lambda e=1:self.set_day_type(e))
+        self.am_btn = tk.Button(self.gen_frame, text="AM", width=2, command=lambda e="am":self.set_day_type(e))
         self.am_btn.grid(row=0, column=3, sticky="ew", padx=3, pady=3)
-        self.pm_btn = tk.Button(self.gen_frame, text="PM", width=2, command=lambda e=0:self.set_day_type(e))
+        self.pm_btn = tk.Button(self.gen_frame, text="PM", width=2, command=lambda e="pm":self.set_day_type(e))
         self.pm_btn.grid(row=0, column=4, sticky="ew", padx=3, pady=3)
 
         self.timezone1_var = tk.StringVar()
@@ -79,7 +84,7 @@ class MainWindow(tk.Tk):
         self.timezone2 = ttk.Combobox(self.conversion_frame, textvariable=self.timezone2_var, state="readonly")
         self.timezone2.grid(row=0, column=2, columnspan=2, sticky="ew", padx=5, pady=5)
 
-        self.switch = tk.Button(self.conversion_frame, image=self.btn_img, command=self.switch)
+        self.switch = tk.Button(self.conversion_frame, image=self.btn_img, command=self.switch_timezone)
         self.switch.grid(row=0, column=4, padx=5, pady=5)
 
         self.result_frame = ttk.Frame(self.conversion_frame, relief="groove")
@@ -111,15 +116,15 @@ class MainWindow(tk.Tk):
         self.timezone2.bind("<<ComboboxSelected>>", self.display)
 
     def set_day_type(self, widget):
-        if widget:
+        if widget == "am":
             self.am_btn.configure(relief=tk.SUNKEN)
             self.pm_btn.configure(relief=tk.RAISED)
         else:
             self.pm_btn.configure(relief=tk.SUNKEN)
             self.am_btn.configure(relief=tk.RAISED)
 
-        utils.set_day_type(widget)
-        print(utils.day_type)
+        utils.set_indication(widget)
+        self.update()
 
     def change_time_format(self):
         utils.set_time_format(int(self.time_format.get()))
@@ -133,8 +138,9 @@ class MainWindow(tk.Tk):
         else:
             self.input_hr.set("12")
             self.input_min.set("00")
-            self.am_btn.configure(state=tk.NORMAL)
+            self.am_btn.configure(state=tk.NORMAL, relief=tk.SUNKEN)
             self.pm_btn.configure(state=tk.NORMAL)
+        self.update()
 
     def update_options(self, w1, w2):
         w1_picked = w1.get()
@@ -192,7 +198,12 @@ class MainWindow(tk.Tk):
             result = "Error"
         
         elif val1 != "" and val2 != "":
-            result = f"{val1:02} : {val2:02} Day {day:+}"       
+            if utils.time_format == 12:
+                
+                result = f"{val1:02} : {val2:02} {self.indication} Day {day:+}"
+            else:
+                result = f"{val1:02} : {val2:02} Day {day:+}"
+        
         else:
             result = f"{val1:02} : {val2:02}"
 
@@ -200,33 +211,28 @@ class MainWindow(tk.Tk):
 
     def display(self, event):
         day = 0
-        day_type = None
-        value1 = self.hour.get()
-        value2 = self.minute.get()
+        hour = int(self.hour.get())
+        minute = self.minute.get()
 
         time1 = self.timezone1_var.get()
         time2 = self.timezone2_var.get()
 
         try:
-            diff1 = self.timezones[time1]
-            hour, minute = utils.convert(value1, value2, diff1, reverse=True)
+            new_hr, day = utils.convert(hour, self.timezones[time1], self.timezones[time2])
+            
+            if utils.time_format == 12:
+                new_hr, self.indication = utils.twentyfour_to_twelve(new_hr)
 
-            diff2 = self.timezones[time2]
-            value1, value2, day = utils.convert(hour, minute, diff2)
+        except Exception as e:
+            print(e)
 
-        except KeyError as ke:
-            print(ke)
-        
-        except ValueError as ve:
-            print(ve)
-
-        if (self.timezone1.get() != "-"):
-            self.update_result(value1, value2, day=day)
+        if self.timezone1.get() != "-":
+            self.update_result(new_hr, minute, day=day)
                 
         else:
             self.update_result()
 
-    def switch(self):
+    def switch_timezone(self):
         time1 = self.timezone1_var.get()
         time2 = self.timezone2_var.get()
 

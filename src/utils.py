@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 import os
+from typing import Literal
 
 now = datetime.now().strftime("%m %A")
 today_yr = datetime.now().strftime("%Y")
@@ -7,7 +8,7 @@ today_yr = datetime.now().strftime("%Y")
 app_path = os.path.abspath(os.getcwd())
 imgs_path = os.path.join(app_path, "imgs")
 SWITCH_IMG = os.path.join(imgs_path, "switch.png")
-ICON_IMG = os.path.join(imgs_path, "icon.ico")
+ICON_IMG = os.path.join(imgs_path, "icon.png")
 
 TIMEZONES_ABBR = [ 
 	("PST", "PDT"), 
@@ -35,31 +36,51 @@ TIMEZONES_ABBR = [
 TIMEZONE = {}
 
 time_format = 24
-day_type = None
+time_indication = "am"
 
-def set_day_type(value):
-	global day_type
-	day_type = value
+def set_indication(value:str) -> None:
+    global time_indication
+    time_indication = value
 
-def set_time_format(value):
+def twentyfour_to_twelve(hour:int) -> tuple[int, str]: # Need to Test This
+    indication = "am"
+    
+    if 24 > hour >= 12:
+        indication = "pm"
+
+    hour = ((hour - 1) % 12) +1
+    
+    return hour, indication
+
+def twelve_to_twentyfour(hour:int, indication:str) -> int: # 00:00 = 12:00 A.m. 12:00 = 12:00 P.m.
+    
+    if hour == 12 and indication == "am":
+        hour -= 12
+    elif indication == "pm" and hour != 12:
+        hour += 12
+
+    hour = ((hour) % 24) 
+    return hour
+
+def set_time_format(value:int) -> None:
 	global time_format
 	time_format = value
 
-def get_n_sunday(month, n=0):
-	sundays = []
-	date = datetime(int(today_yr), month, 1)
-	date_cpy = date
+def get_n_sunday(month:int, n_sunday:int=0) -> tuple[int, int]:
+    sundays = []
+    date = datetime(int(today_yr), month, 1)
+    date_cpy = date
 
-	while date_cpy.month == month:
+    while date_cpy.month == month:
 
-		if date_cpy.weekday() == 6:
-			sundays.append(date_cpy.day)
+        if date_cpy.weekday() == 6:
+            sundays.append(date_cpy.day)
 
-		date_cpy += timedelta(days=1)
+        date_cpy += timedelta(days=1)
 
-	return date.month, sundays[n]
+    return date.month, sundays[n_sunday]
 
-def is_day_light(start, end):
+def is_day_light(start:tuple[int, int], end:tuple[int, int]) -> bool:
     start_month, start_day = start
     end_month, end_day = end
     
@@ -82,29 +103,23 @@ def time_filter(func):
     
     return wrapper
 
-def convert(hour, minute, diff, reverse=False):
-	global time_format, day_type
-	day = 0
+def convert(hour: int, time_diff1: int, time_diff2: int) -> tuple[int, Literal[1, -1, 0]]:
+    
+    day = 0
+    if time_format == 12:
+        hour = twelve_to_twentyfour(hour, time_indication)
 
-	if reverse:
-		if diff > 0:
-			return int(hour) + -abs(diff), minute
-		else:
-			return int(hour) + abs(diff), minute
+    new_hr = (hour + (time_diff1 * -1)) + time_diff2
+    
+    if new_hr > 23:
+        day += 1
+    elif new_hr < 0:
+        day -= 1
+    new_hr = new_hr % 24
 
-	hour = int(hour) + diff
+    return new_hr, day
 
-	if int(hour) < 0:
-		hour = time_format + int(hour)
-		day -= 1
-
-	if int(hour) >= time_format:
-		hour = hour - time_format
-		day += 1
-
-	return int(hour), minute, day
-
-def get_offset(start:tuple, end:tuple, offset:int):
+def get_offset(start:tuple, end:tuple, offset:int) -> int:
 	month_start, sun_1 = start 
 	month_end, sun_2 = end
 	offset+=1 if is_day_light(get_n_sunday(month_start, sun_1), get_n_sunday(month_end, sun_2)) else offset
@@ -133,4 +148,3 @@ for index, timezone in enumerate(TIMEZONES_ABBR):
 	else:
 		TIMEZONE[timezone[0]] = offset
 
-print(TIMEZONE)
