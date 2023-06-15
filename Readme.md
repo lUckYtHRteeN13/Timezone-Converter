@@ -4,7 +4,7 @@ This is a Time Zone Converter with Tkinter GUI.
 
 ## Setup & Installation
 
-To Install this application you can download its [`Source Code (zip)`](https://github.com/lUckYtHRteeN13/Timezone-Converter/archive/refs/tags/Release0.0.1.zip) or its [`Time-Zone-Converter-(Setup).exe [Preferred]`](https://github.com/lUckYtHRteeN13/Timezone-Converter/releases/download/Release0.0.1/Time.Zone.Converter.Setup.exe) or go to this [`Release Link`](https://github.com/lUckYtHRteeN13/Timezone-Converter/releases/tag/Release0.0.1) to choose.
+To Install this application you can download its [`Source Code (zip)`](https://github.com/lUckYtHRteeN13/Timezone-Converter/archive/refs/tags/Version0.2.zip) or its [`Time-Zone-Converter-(Setup).exe [Preferred]`](https://github.com/lUckYtHRteeN13/Timezone-Converter/releases/download/Version0.2/Time.Zone.Converter.Setup.exe) or go to this [`Release Link`](https://github.com/lUckYtHRteeN13/Timezone-Converter/releases/tag/Version0.2) to choose.
 
 ### Through Source Code
 
