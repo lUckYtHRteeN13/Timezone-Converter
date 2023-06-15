@@ -3,7 +3,8 @@
  False,
  False,
  True,
- 'C:\\Users\\lUckYtHRteeN13\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\PyInstaller\\bootloader\\images\\icon-windowed.ico',
+ ['C:\\Programming\\python\\Projects\\tkinter\\Time Zone '
+  'Converter\\src\\imgs\\icon.ico'],
  None,
  False,
  False,
@@ -56,7 +57,7 @@
  [],
  False,
  False,
- 1683343186,
+ 1686800631,
  [('runw.exe',
    'C:\\Users\\lUckYtHRteeN13\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\PyInstaller\\bootloader\\Windows-64bit-intel\\runw.exe',
    'EXECUTABLE')])
